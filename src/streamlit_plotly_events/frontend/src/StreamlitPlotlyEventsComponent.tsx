@@ -6,12 +6,49 @@ import {
 import React, { ReactNode } from "react"
 import Plot from 'react-plotly.js';
 
+const decodeData = (data: any) => {
+  if (data && data.bdata) {
+    // Decode Base64 and convert to a typed array
+    const binaryString = atob(data.bdata);
+    const byteArray = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      byteArray[i] = binaryString.charCodeAt(i);
+    }
+    return Array.from(byteArray);
+  }
+  return data;
+};
+
 class StreamlitPlotlyEventsComponent extends StreamlitComponentBase {
   public render = (): ReactNode => {
     // Pull Plotly object from args and parse
+    // print args to console
+    console.log(this.props.args);
+    // console.log(this.props.args["plot_obj"]);
+    // print plot_obj to console
+    // console.log(JSON.parse(this.props.args["plot_obj"]));
+    // print click_event to console
+    // console.log(this.props.args["click_event"]);
+    // console.log(this.props.args["select_event"]);
+    // console.log(this.props.args["hover_event"]);
+
     const plot_obj = JSON.parse(this.props.args["plot_obj"]);
+
+    // Decode x and y data
+    plot_obj.data = plot_obj.data.map((trace: any) => {
+      if (trace.x && trace.x.bdata) {
+        trace.x = decodeData(trace.x);
+      }
+      if (trace.y && trace.y.bdata) {
+        trace.y = decodeData(trace.y);
+      }
+      return trace;
+    });
+
     const override_height = this.props.args["override_height"];
+    console.log(`override_height ${override_height}`);
     const override_width = this.props.args["override_width"];
+    console.log(`override_width ${override_width}`);
 
     // Event booleans
     const click_event = this.props.args["click_event"];
