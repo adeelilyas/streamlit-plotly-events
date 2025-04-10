@@ -153,19 +153,20 @@ if not _RELEASE:
     import networkx as nx  # Add this import
     import plotly.graph_objects as go
 
+    # Initialize session state for node positions if not already set
+    if "node_positions" not in st.session_state:
+        st.session_state.node_positions = {"A": (0, 0), "B": (0.1, -1), "C": (1, -1)}
+
     # Create a graph with nodes A, B, and C
     G = nx.Graph()
     G.add_edges_from([("A", "B"), ("B", "C"), ("A", "C")])  # Define relationships
-
-    # Define fixed positions for the nodes
-    fixed_pos = {"A": (0, 0), "B": (0.5, 0.5), "C": (1, -1)}
 
     # Create edge traces
     edge_x = []
     edge_y = []
     for edge in G.edges():
-        x0, y0 = fixed_pos[edge[0]]
-        x1, y1 = fixed_pos[edge[1]]
+        x0, y0 = st.session_state.node_positions[edge[0]]
+        x1, y1 = st.session_state.node_positions[edge[1]]
         edge_x.extend([x0, x1, None])
         edge_y.extend([y0, y1, None])
 
@@ -181,7 +182,7 @@ if not _RELEASE:
     node_x = []
     node_y = []
     for node in G.nodes():
-        x, y = fixed_pos[node]
+        x, y = st.session_state.node_positions[node]
         node_x.append(x)
         node_y.append(y)
 
@@ -193,7 +194,7 @@ if not _RELEASE:
         textposition="top center",
         marker=dict(
             size=30,  # Increased size of the nodes
-            color="blue",
+            color="pink",
             line=dict(width=2, color="black"),
         ),
     )
@@ -207,11 +208,20 @@ if not _RELEASE:
         plot_bgcolor="black",
         paper_bgcolor="black",
         font_color="white",
+        dragmode="pan",  # Enable panning
     )
-    # Increase the size of the node circles and change their color to Pink
-    fig.update_traces(selector=dict(mode="markers+text"), marker=dict(size=30, color="pink"))
 
     st.subheader("Graph Chart with Nodes A, B, and C")
     plot_name_holder6 = st.empty()
     clickedPoint6 = plotly_events(fig, key="graph_abc")
+
+    # Update node positions if a node is clicked
+    if clickedPoint6:
+        clicked_node = clickedPoint6[0]
+        node_name = list(G.nodes())[clicked_node['pointIndex']]
+        st.session_state.node_positions[node_name] = (
+            clicked_node['x'],
+            clicked_node['y']
+        )
+
     plot_name_holder6.write(f"Clicked Point: {clickedPoint6}")
